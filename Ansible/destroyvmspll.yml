@@ -1,6 +1,6 @@
 ---
 
-- hosts: all:!localhost
+- hosts: {{ env_name_clean }}:!local:!storage_hosts
   connection: local
   gather_facts: no
   tasks:

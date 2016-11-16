@@ -38,12 +38,11 @@
   when: not destroy_forced
 
 - name: debug remove_retval
-  debug: msg="{{ remove_retval }}"
+  debug: msg="{{ remove_retval.default_ip }}"
 
 ####################################################################
 # update host inventory
 #
-
 - name: Update inventory file - remove server IP addresses
   local_action: replace
     dest="hosts_{{ env_name_clean }}"
