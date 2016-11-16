@@ -29,22 +29,37 @@
 - name: Destroy hosts in project {{ env_name_clean }}
   local_action:
     module: cs_instance
-    name: "{{ item }}"
+    name: "{{ inventory_hostname }}"
     project: "{{ build_project }}"
     state: "{{ vm_state | default( 'absent' ) }}"
     force: true
-  with_items:
-    - "{{ groups['vc_hosts'] }}"
-    - "{{ groups['hypervisor_hosts'] }}"
-    - "{{ groups['mysql_hosts'] }}"
-    - "{{ groups['cloudstack_manager_hosts'] }}"
-    - "{{ groups['marvin_host'] }}"
   register: remove_retval
   ignore_errors: yes
   when: not destroy_forced
-#  async: 1000
-#  poll: 0
-#  Async removed due to results not parsing, host file not updating as result.
+
+- name: debug remove_retval
+  debug: msg="{{ remove_retval }}"
+
+####################################################################
+# update host inventory
+#
+
+- name: Update inventory file - remove server IP addresses
+  local_action:
+    module: replace
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.default_ip }}'
+    replace='{{ item.name }}-ip'
+    backup=no
+  with_items: "{{remove_retval}}"
+
+- name: Update inventory file - remove instance name
+  replace:
+    dest="hosts_{{ env_name_clean }}"
+    regexp='{{ item.instance_name }}'
+    replace='{{ item.name }}-instance_name'
+    backup=no
+  with_items: "{{remove_retval}}"
 
 ####################################################################
 # Remove project

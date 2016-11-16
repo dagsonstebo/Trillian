@@ -1,0 +1,80 @@
+---
+
+- hosts: all:!localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - include: ./tasks/removeprojectpll.yml
+
+- hosts: primary_storage_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-nfsshares, storage_action: 'removeprimary', when: not destroy_forced }
+
+- hosts: secondary_storage_hosts
+  gather_facts: no
+  roles:
+    - { role: cloudstack-nfsshares, storage_action: 'removesecondary', when: not destroy_forced }
+
+## Clean DB
+
+- hosts: localhost
+  connection: local
+  gather_facts: no
+  tasks:
+    - name: Release environment details
+      env_db_manage: DBHOST={{ env_db_ip }} DBUSER={{ env_db_user }} DBPASS={{ env_db_password }} DBNAME={{ env_db_name }} ENV_UUID={{ env_uuid }} ENV_NAME={{ env_name_clean }} ENV_COMMENT='{{ env_comment }}' ENV_ACTION=rel
+      when: not destroy_forced
+
+    - name: Check for environments db failure
+      fail: msg="Environment not successfully released - {{ env_return }} {{ env_retmsg }}."
+      when: env_return != "success"
+
+#    - name: Update inventory file - remove server IP addresses
+#      replace:
+#        dest="hosts_{{ env_name_clean }}"
+#        regexp='{{ item.default_ip }}'
+#        replace='{{ item.name }}-ip'
+#        backup=no
+#      with_items: "{{remove_retval.results}}"
+
+#    - name: Update inventory file - remove instance name
+#      replace:
+#        dest="hosts_{{ env_name_clean }}"
+#        regexp='{{ item.instance_name }}'
+#        replace='{{ item.name }}-instance_name'
+#        backup=no
+#      with_items: "{{remove_retval.results}}"
+
+    - name: Remove HV IP list from group vars
+      lineinfile:
+        dest="group_vars/{{ env_name_clean }}"
+        regexp="^env_hviplist.*$"
+        state=absent
+
+    - name: Update group vars file - remove environmemt details
+      lineinfile:
+        dest="group_vars/{{ env_name_clean }}"
+        regexp='{{ item }}'
+        state=absent
+      with_items:
+        - "^env_pubvlan.*$"
+        - "^env_pubgw.*$"
+        - "^env_pubmask.*$"
+        - "^env_pubendip.*$"
+        - "^env_pubstartip.*$"
+        - "^env_podvlans.*$"
+        - "^env_podgw.*$"
+        - "^env_podmask.*$"
+        - "^env_podendip.*$"
+        - "^env_podstartip.*$"
+      ignore_errors: true
+
+    - name: Delete inventory files
+      file:
+        path="{{ item }}"
+        state="absent"
+      with_items:
+        - "hosts_{{ env_name_clean }}"
+        - "group_vars/{{ env_name_clean }}"
+      when: removeconfig is defined
