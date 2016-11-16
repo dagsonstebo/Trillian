@@ -45,8 +45,7 @@
 #
 
 - name: Update inventory file - remove server IP addresses
-  local_action:
-    module: replace
+  local_action: replace
     dest="hosts_{{ env_name_clean }}"
     regexp="{{ item.default_ip }}"
     replace="{{ item.name }}-ip"
@@ -54,8 +53,7 @@
   with_items: "{{remove_retval}}"
 
 - name: Update inventory file - remove instance name
-  local_action:
-    module: replace
+  local_action: replace
     dest="hosts_{{ env_name_clean }}"
     regexp='{{ item.instance_name }}'
     replace='{{ item.name }}-instance_name'
