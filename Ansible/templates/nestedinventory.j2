@@ -97,7 +97,6 @@ secondary_cs_manager
 {% endif %}
 {% endif %}
 
-
 [kvm_hosts]
 {% if kvm_os | lower != "na" %}
 {% if not use_external_hv_hosts %}
@@ -126,3 +125,10 @@ secondary_storage_hosts
 
 [secondary_storage_hosts]
 {{ env_sechost | default( def_env_sechost ) }} ansible_ssh_host={{ env_sechost | default( def_env_sechost ) }} ansible_ssh_pass={{ sec_password | default( def_sec_password ) }}
+
+[deploy_destroy_hosts:children]
+hypervisor_hosts
+cloudstack_manager_hosts
+mysql_hosts
+vc_hosts
+marvin_host

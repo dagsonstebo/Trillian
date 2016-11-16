@@ -46,18 +46,18 @@
 - name: Update inventory file - remove server IP addresses
   local_action: replace
     dest="hosts_{{ env_name_clean }}"
-    regexp="{{ item.default_ip }}"
-    replace="{{ item.name }}-ip"
+    regexp="{{ remove_retval.default_ip }}"
+    replace="{{ remove_retval.name }}-ip"
     backup=no
-  with_items: "{{remove_retval}}"
+#  with_items: "{{remove_retval}}"
 
 - name: Update inventory file - remove instance name
   local_action: replace
     dest="hosts_{{ env_name_clean }}"
-    regexp='{{ item.instance_name }}'
-    replace='{{ item.name }}-instance_name'
+    regexp='{{ remove_retval.instance_name }}'
+    replace='{{ remove_retval.name }}-instance_name'
     backup=no
-  with_items: "{{remove_retval}}"
+#  with_items: "{{remove_retval}}"
 
 ####################################################################
 # Remove project
