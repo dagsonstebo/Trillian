@@ -23,7 +23,7 @@
 # Remove servers
 #
 - name: Set remove action
-  set_fact: vm_state="expunged"
+  local_action: set_fact: vm_state="expunged"
   when: (expunge is defined) and (not destroy_forced)
 
 - name: Destroy hosts in project {{ env_name_clean }}
@@ -37,9 +37,6 @@
   ignore_errors: yes
   when: not destroy_forced
 
-- name: debug remove_retval
-  debug: msg="{{ remove_retval.default_ip }}"
-
 ####################################################################
 # update host inventory
 #
@@ -49,7 +46,6 @@
     regexp="{{ remove_retval.default_ip }}"
     replace="{{ remove_retval.name }}-ip"
     backup=no
-#  with_items: "{{remove_retval}}"
 
 - name: Update inventory file - remove instance name
   local_action: replace
@@ -57,7 +53,6 @@
     regexp='{{ remove_retval.instance_name }}'
     replace='{{ remove_retval.name }}-instance_name'
     backup=no
-#  with_items: "{{remove_retval}}"
 
 ####################################################################
 # Remove project
