@@ -23,7 +23,7 @@
 # Remove servers
 #
 - name: Set remove action
-  local_action: set_fact: vm_state="expunged"
+  local_action: set_fact vm_state="expunged"
   when: (expunge is defined) and (not destroy_forced)
 
 - name: Destroy hosts in project {{ env_name_clean }}

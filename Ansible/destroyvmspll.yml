@@ -1,6 +1,6 @@
 ---
 
-- hosts: "{{ env_name_clean }}:!local:!storage_hosts"
+- hosts: deploy_destroy_hosts
   connection: local
   gather_facts: no
   tasks:
