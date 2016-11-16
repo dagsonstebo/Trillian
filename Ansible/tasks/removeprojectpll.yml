@@ -48,13 +48,14 @@
   local_action:
     module: replace
     dest="hosts_{{ env_name_clean }}"
-    regexp='{{ item.default_ip }}'
-    replace='{{ item.name }}-ip'
+    regexp="{{ item.default_ip }}"
+    replace="{{ item.name }}-ip"
     backup=no
   with_items: "{{remove_retval}}"
 
 - name: Update inventory file - remove instance name
-  replace:
+  local_action:
+    module: replace
     dest="hosts_{{ env_name_clean }}"
     regexp='{{ item.instance_name }}'
     replace='{{ item.name }}-instance_name'
