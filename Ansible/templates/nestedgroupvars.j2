@@ -24,10 +24,16 @@ management_vm_hypervisor: "{{ management_vm_hypervisor | default( def_management
 build_project: "{{ build_project }}"
 build_zone: "{{ build_zone | default( def_build_zone ) }}"
 build_keyboard: "{{ build_keyboard | default( def_build_keyboard ) }}"
+sysvms_running_retries: {{ sysvms_running_retries | default( def_sysvms_running_retries ) }}
+sysvms_up_retries: {{ sysvms_up_retries | default( def_sysvms_up_retries ) }}
 ssh_retries: {{ ssh_retries | default( def_ssh_retries ) }}
+builin_template_retries: {{ builin_template_retries | defaul( def_builin_template_retries ) }}
+ui_up_retries: {{ ui_up_retries | default ( def_ui_up_retries ) }}
+ssh_timeout: {{ ssh_timeout | default( def_ssh_timeout) }}
 env_timezone: "{{ env_timezone | default(def_env_timezone) }}"
 use_external_hv_hosts: "{{ use_external_hv_hosts | default(no) }}"
 use_dvfilter: {{ use_dvfilter | default(def_use_dvfilter) }}
+
 
 # Environment database settings
 env_db_name: "{{ env_db_name | default( def_env_db_name ) }}"

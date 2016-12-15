@@ -8,7 +8,7 @@
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
   until: result.stdout.find("unable to verify user") != -1
-  retries: 25
+  retries: {{ ui_up_retries }}
   tags:
     - waitfortemplate
 
@@ -16,6 +16,6 @@
   shell: cloudmonkey list templates listall=true templatefilter=all | jq '.template[]| select(.templatetype=="BUILTIN") | .isready'
   register: result
   until: result.stdout == "true"
-  retries: 300
+  retries: {{ builin_template_retries }}
   tags:
     - waitfortemplate

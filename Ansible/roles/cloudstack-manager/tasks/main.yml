@@ -15,7 +15,7 @@
 #limitations under the License.
 
 - name: wait for ssh
-  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout=5
+  local_action: wait_for port=22 host="{{ ansible_ssh_host }}" timeout={{ ssh_retries }} connect_timeout={{ ssh_timeout }}
 
 - name: now i'm connected, get facts
   setup:
@@ -38,7 +38,7 @@
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
   until: result.stdout.find("unable to verify user") != -1
-  retries: 48
+  retries: {{ ui_up_retries }}
   when: ("primary_cs_manager" in group_names)
 
 - include: ./preconfig_globalsettings.yml

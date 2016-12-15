@@ -6,7 +6,7 @@
   shell: "curl http://127.0.0.1:8080/client/api --connect-timeout 5"
   register: result
   until: result.stdout.find("unable to verify user") != -1
-  retries: 25
+  retries: {{ ui_up_retries }}
   tags:
     - waitforenv
 
@@ -14,7 +14,7 @@
   shell: cloudmonkey list systemvms | jq '.systemvm[]| select(.systemvmtype=="consoleproxy")|.state'
   register: result
   until: result.stdout.find("Running") != -1
-  retries: 200
+  retries: {{ sysvms_running_retries }}
   tags:
     - waitforenv
 
@@ -22,7 +22,7 @@
   shell: cloudmonkey list systemvms | jq '.systemvm[]| select(.systemvmtype=="secondarystoragevm")|.state'
   register: result
   until: result.stdout.find("Running") != -1
-  retries: 200
+  retries: {{ sysvms_running_retries }}
   tags:
     - waitforenv
 
@@ -30,7 +30,7 @@
   shell: cloudmonkey list hosts type=ConsoleProxy | jq '.host[] | .state'
   register: result
   until: result.stdout.find("Up") != -1
-  retries: 200
+  retries: {{ sysvms_up_retries }}
   tags:
     - waitforenv
 
@@ -38,6 +38,6 @@
   shell: cloudmonkey list hosts type=SecondaryStorageVM | jq '.host[] | .state'
   register: result
   until: result.stdout.find("Up") != -1
-  retries: 200
+  retries: {{ sysvms_up_retries }}
   tags:
     - waitforenv
