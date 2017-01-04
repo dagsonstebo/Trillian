@@ -41,6 +41,7 @@
 
   - name: Report targetcli configuration
     debug: msg={{ targetconfig.stdout }}
+    ignore_errors: true
 
   - name: Delete fingerprint file
     file: path={{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_uuid }} state=absent
