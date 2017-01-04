@@ -38,10 +38,10 @@
   - name: Targetcli - check config
     shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }} ls
     register: targetconfig
+    ignore_errors: true
 
   - name: Report targetcli configuration
     debug: msg={{ targetconfig.stdout }}
-    ignore_errors: true
 
   - name: Delete fingerprint file
     file: path={{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_uuid }} state=absent
