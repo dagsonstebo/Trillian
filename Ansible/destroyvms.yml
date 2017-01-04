@@ -16,6 +16,11 @@
   roles:
     - { role: cloudstack-nfsshares, storage_action: 'removesecondary', when: not destroy_forced }
 
+- hosts: primary_storage_hosts_iscsi
+  gather_facts: no
+  roles:
+    - { role: cloudstack-iscsi, storage_action: 'removeprimary', when: env_priprot | lower == "iscsi" }
+
 ## Clean DB
 
 - hosts: localhost
