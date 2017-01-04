@@ -33,6 +33,7 @@
   - name: Targetcli - remove quorum
     shell: targetcli backstores/fileio/ delete {{ env_name_clean }}-quorum
     when: env_hv == "kvm"
+    ignore_errors: true
 
   - name: Targetcli - check config
     shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }} ls

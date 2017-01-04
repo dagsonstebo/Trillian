@@ -50,7 +50,7 @@
   shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1 set attribute generate_node_acls=1
 
 - name: Targetcli - assign LUNs to target - quorum
-  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/luns/ create /backstores/fileio/quorum
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/luns/ create /backstores/fileio/{{ env_name_clean }}-quorum
   when: env_hv == "kvm"
 
 - name: Targetcli - assign LUNs to target
