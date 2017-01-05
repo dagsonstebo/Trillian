@@ -35,13 +35,13 @@
     when: env_hv == "kvm"
     ignore_errors: true
 
-  - name: Targetcli - check config
+  - name: Targetcli - check config - expected to fail
     shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }} ls
     register: targetconfig
     ignore_errors: true
 
-  - name: Report targetcli configuration
-    debug: msg={{ targetconfig.stdout }}
+  - name: Report targetcli configuration - reporting stderr from above check
+    debug: msg={{ targetconfig.stderr }}
 
   - name: Delete fingerprint file
     file: path={{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_uuid }} state=absent

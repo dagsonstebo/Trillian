@@ -19,7 +19,7 @@
 - hosts: primary_storage_hosts_iscsi
   gather_facts: no
   roles:
-    - { role: cloudstack-iscsi, storage_action: 'removeprimary', when: env_priprot | lower == "iscsi" }
+    - { role: cloudstack-iscsi, storage_action: 'removeprimary', when: ( env_priprot | lower == "iscsi" ) and not destroy_forced }
 
 ## Clean DB
 
