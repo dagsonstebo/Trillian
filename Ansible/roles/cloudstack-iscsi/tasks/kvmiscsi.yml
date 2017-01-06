@@ -1,0 +1,78 @@
+See this http://irvingpop.github.io/blog/2015/03/01/redhat7-clustering-experiments/
+
+
+
+yum update
+yum -y install fence-agents-all lvm2-cluster
+yum install -y pcs
+#firewall if present
+echo password | passwd --stdin hacluster
+systemctl start pcsd.service
+systemctl enable pcsd.service
+
+#maybe check pcsd website
+# https://10.2.2.41:2224/login
+
+iscsiadm -m discovery -t sendtargets -p 10.2.0.34
+iscsiadm -m node -T iqn.2017-01.local.sblab:84e4e34d-7710-4cea-af11-12af98d531ff --login
+check session
+iscsiadm -m session
+
+Check mapped disks
+fdisk -l | grep sdb
+
+
+Create cluster
+pcs cluster auth 10.2.2.41 10.2.2.46 -u hacluster -p password
+
+pcs cluster setup --start --name iscsicluster1 10.2.2.41 10.2.2.46 -u hacluster -p password
+Destroying cluster on nodes: 10.2.2.41, 10.2.2.46...
+10.2.2.46: Stopping Cluster (pacemaker)...
+10.2.2.41: Stopping Cluster (pacemaker)...
+10.2.2.46: Successfully destroyed cluster
+10.2.2.41: Successfully destroyed cluster
+
+Sending cluster config files to the nodes...
+10.2.2.41: Succeeded
+10.2.2.46: Succeeded
+
+Starting cluster on nodes: 10.2.2.41, 10.2.2.46...
+10.2.2.41: Starting Cluster...
+10.2.2.46: Starting Cluster...
+
+Synchronizing pcsd certificates on nodes 10.2.2.41, 10.2.2.46...
+10.2.2.41: Success
+10.2.2.46: Success
+
+Restarting pcsd on the nodes in order to reload the certificates...
+10.2.2.41: Success
+10.2.2.46: Success
+
+Bad - adds 4 nodes - fqdn and ip - in web gui - but good from command line
+
+[root@ds-49kvmlab2-kvm1 ~]# pcs cluster status
+Cluster Status:
+ Stack: corosync
+ Current DC: ds-49kvmlab2-kvm1 (version 1.1.15-11.el7_3.2-e174ec8) - partition with quorum
+ Last updated: Fri Jan  6 15:06:12 2017		Last change: Fri Jan  6 15:03:44 2017 by hacluster via crmd on ds-49kvmlab2-kvm1
+ 2 nodes and 0 resources configured
+
+PCSD Status:
+  ds-49kvmlab2-kvm1 (10.2.2.41): Online
+  ds-49kvmlab2-kvm2 (10.2.2.46): Online
+
+
+Enable cluster:
+  pcs cluster enable --all
+
+LVM
+lvmconf --enable-cluster (sets locking type = 3)
+
+
+STONITH
+pcs stonith show
+
+pcs stonith create scsi fence_scsi pcmk_host_list="10.2.2.41 10.2.2.46" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
+pcs stonith create scsi fence_scsi devices=/dev/disk/by-path/ip-10.2.0.34\:3260-iscsi-iqn.2017-01.local.sblab\:84e4e34d-7710-4cea-af11-12af98d531ff-lun-0 meta provides=unfencing
+
+pcs stonith create scsi fence_scsi devices=/dev/disk/by-path/ip-10.2.0.34\:3260-iscsi-iqn.2017-01.local.sblab\:84e4e34d-7710-4cea-af11-12af98d531ff-lun-0 meta provides=unfencing pcmk_host_list="10.2.2.41 10.2.2.46"
