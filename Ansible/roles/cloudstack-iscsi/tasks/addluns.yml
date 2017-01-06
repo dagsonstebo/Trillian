@@ -43,11 +43,15 @@
 - name: Targetcli - add iscsi target
   shell: targetcli iscsi/ create {{ env_iscsi_target }}:{{ env_uuid }}
 
-- name: Targetcli - disable authentication
-  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1 set attribute authentication=0
-
-- name: Targetcli - disable acls
-  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1 set attribute generate_node_acls=1
+- name: Targetcli - configuration of tpg
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1 {{ item }}
+  with_items:
+    - "set attribute authentication=0"
+    - "set attribute generate_node_acls=1"
+    - "cache_dynamic_acls=1"
+    - "demo_mode_discovery=1"
+    - "demo_mode_write_protect=0"
+    - "prod_mode_write_protect=0"
 
 - name: Targetcli - assign LUNs to target - quorum
   shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/luns/ create /backstores/fileio/{{ env_name_clean }}-quorum
