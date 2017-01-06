@@ -31,15 +31,6 @@
 
   when: pathretval.stat.exists | trim  == "False"
 
-- name: Targetcli - add KVM quorum backstore
-  shell: targetcli backstores/fileio create {{ env_name_clean }}-quorum {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_name_clean }}-quorum 10M write_back=false
-  when: env_hv == "kvm"
-
-- name: Targetcli - add primary backstores
-  shell: targetcli backstores/fileio create {{ item }} {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ item }} {{ env_iscsilunsize }} write_back=false
-  with_items:
-    - "{{ env_pripools }}"
-
 - name: Targetcli - add iscsi target
   shell: targetcli iscsi/ create {{ env_iscsi_target }}:{{ env_uuid }}
 
@@ -52,6 +43,15 @@
     - "demo_mode_discovery=1"
     - "demo_mode_write_protect=0"
     - "prod_mode_write_protect=0"
+
+- name: Targetcli - add KVM quorum backstore
+  shell: targetcli backstores/fileio create {{ env_name_clean }}-quorum {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_name_clean }}-quorum 10M write_back=false
+  when: env_hv == "kvm"
+
+- name: Targetcli - add primary backstores
+  shell: targetcli backstores/fileio create {{ item }} {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ item }} {{ env_iscsilunsize }} write_back=false
+  with_items:
+    - "{{ env_pripools }}"
 
 - name: Targetcli - assign LUNs to target - quorum
   shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/luns/ create /backstores/fileio/{{ env_name_clean }}-quorum
