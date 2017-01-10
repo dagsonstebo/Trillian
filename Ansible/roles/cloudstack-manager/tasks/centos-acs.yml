@@ -18,6 +18,12 @@
 - name: "Setup Apache Cloudstack Repo file. baseurl={{ baseurl_cloudstack }} "
   template: src=cloudstack.repo.j2 dest=/etc/yum.repos.d/cloudstack.repo
 
+- name: set yum repos to local
+  template: src="{{ inventory_dir }}/templates/{{ item }}.j2" dest="/etc/yum.repos.d/{{item}}"
+  with_items:
+    - "epel.repo"
+    - "CentOS-Base.repo"
+
 - name: Ensure CloudStack packages are installed
   yum: name=cloudstack-management state=present enablerepo=base
 

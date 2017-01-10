@@ -125,7 +125,7 @@
     - add_vwmare_hosts
 
 
-- name: Create dvswitch
+- name: Create Management dvswitch
   local_action:
     module: vmware_dvswitch
     hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
@@ -133,6 +133,44 @@
     password: "{{ vmware_vcsa_pass }}"
     datacenter_name: "{{ vmware_datacenter_name }}"
     switch_name: dvSwitch0
+    mtu: 9000
+    uplink_quantity: 1
+    discovery_proto: lldp
+    discovery_operation: both
+    state: present
+    validate_certs: false
+  when: esxi_use_dvswitch_mgmt
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch_mgmt
+
+- name: Create Management portgroup
+  local_action:
+    module: vmware_dvs_portgroup
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    portgroup_name: Management Network
+    switch_name: dvSwitch0
+    vlan_id: 0
+    num_ports: 120
+    portgroup_type: earlyBinding
+    state: present
+  when: esxi_use_dvswitch_mgmt
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch_mgmt
+
+- name: Create dvswitch
+  local_action:
+    module: vmware_dvswitch
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    datacenter_name: "{{ vmware_datacenter_name }}"
+    switch_name: dvSwitch1
     mtu: 1500
     uplink_quantity: 1
     discovery_proto: lldp
@@ -145,6 +183,7 @@
     - add_vwmare_hosts
     - add_dvswitch
 
+
 - name: Add Host to dVS
   local_action:
     module: vmware_dvs_host
@@ -152,7 +191,7 @@
     username: "{{ vmware_vcsa_user }}"
     password: "{{ vmware_vcsa_pass }}"
     esxi_hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
-    switch_name: dvSwitch0
+    switch_name: dvSwitch1
     vmnics:
         - vmnic1
     state: present
@@ -164,3 +203,46 @@
     - vc_config
     - add_vwmare_hosts
     - add_dvswitch
+
+
+- name: Add Host to mgmt dVS
+  local_action:
+    module: vmware_dvs_host
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    esxi_hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
+    switch_name: dvSwitch0
+    vmnics: 
+      - vmnic0
+    state: present
+    validate_certs: false
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  when: esxi_use_dvswitch
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch_mgmt
+
+- name: Migrate Management vmk
+  local_action:
+    module: vmware_migrate_vmk
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    esxi_hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
+    device: vmk0
+    current_switch_name: vSwitch0
+    current_portgroup_name: "Management Network"
+    migrate_switch_name: dvSwitch0
+    migrate_portgroup_name: "Management Network"
+    validate_certs: false
+  with_items:
+  - "{{ groups['esxi_hosts'] }}"
+  when: esxi_use_dvswitch_mgmt
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch_mgmt
+
