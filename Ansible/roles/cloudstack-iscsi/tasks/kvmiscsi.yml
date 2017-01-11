@@ -108,19 +108,9 @@
     with_together:
       - "{{ env_pripools }}"
       - "{{ iscsiluns.stdout_lines }}"
+    ignore_errors: yes
 
   when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
-
-# Additional nodes
-#- block:
-#
-#  - name: vgcreate all disks
-#    shell: vgcreate -cy {{ item.0 }} /dev/{{ item.1 }}
-#    with_together:
-#      - "{{ env_pripools }}"
-#      - "{{ iscsiluns.stdout_lines }}"
-#
-#  when: inventory_hostname != "{{ groups['kvm_hosts'][0] }}"
 
 # https://access.redhat.com/solutions/638843
 - name: Ensure network manager is disabled - important
