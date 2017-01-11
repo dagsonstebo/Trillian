@@ -60,15 +60,27 @@
     shell: pcs constraint colocation add clvmd-clone with dlm-clone
 
   - name: Register all iscsi mounted disks
-    shell: iscsiadm -m session -P3 | grep sd | cut -d ' ' -f 4 | cut -f 1
+    shell: iscsiadm -m session -P3 | grep sd | cut -d ' ' -f 4 | cut -f 1 | grep -v sdb
     register: iscsiluns
 
   - name: debug some
     debug: msg="lun is {{ item }}"
     with_items:
-      - iscsiluns.results
+      - "{{ iscsiluns.stdout_lines }}"
+    ignore_errors: true
 
-  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}" )
+  - name: pvcreate all disks
+    shell: pvcreate /dev/{{ item }}
+    with_items:
+      - "{{ iscsiluns.stdout_lines }}"
+
+  - name: vgcreate all disks
+    shell: vgcreate -cy {{ item.0 }} /dev/{{ item.1 }}
+    with_together:
+      - "{{ env_pripools }}"
+      - "{{ iscsiluns.stdout_lines }}"
+
+  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
 
 # https://access.redhat.com/solutions/638843
 - name: Ensure network manager is disabled - important
