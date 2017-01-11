@@ -30,6 +30,20 @@
 - name: Configure LVM for cluster disks
   shell: lvmconf --enable-cluster
 
+- name: Determine list of kvm hosts
+  "{{ groups['mysql_hosts'] | length }}"
+
+- name: List KVM hostnames
+  set_fact:
+    kvmhostlist: |
+      {%- for item in groups[ kvm_hosts | trim ] -%}
+        {{ hostvars[item]['inventory_hostname'] }}
+        {%- if not loop.last -%} {%- else -%}{%- endif -%}
+      {%- endfor -%}
+
+- name: Print list of KVM hosts
+  debug: msg="KVM hosts are {{ kvmhostlist | trim }}
+
 # First node only
 - block:
   - name: Auth cluster node 1
@@ -73,6 +87,7 @@
     shell: pvcreate /dev/{{ item }}
     with_items:
       - "{{ iscsiluns.stdout_lines }}"
+    ignore_errors: true
 
   - name: vgcreate all disks
     shell: vgcreate -cy {{ item.0 }} /dev/{{ item.1 }}
