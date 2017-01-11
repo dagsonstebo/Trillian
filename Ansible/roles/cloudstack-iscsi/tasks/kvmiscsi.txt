@@ -2,9 +2,8 @@ See this http://irvingpop.github.io/blog/2015/03/01/redhat7-clustering-experimen
 
 
 
-yum update
-yum -y install fence-agents-all lvm2-cluster
-yum install -y pcs
+yum -y update
+yum -y install fence-agents-all lvm2-cluster pcs
 #firewall if present
 echo password | passwd --stdin hacluster
 systemctl start pcsd.service
@@ -23,7 +22,7 @@ fdisk -l | grep sdb
 
 
 Create cluster
-pcs cluster auth 10.2.2.41 10.2.2.46 -u hacluster -p password
+pcs cluster auth HOSTNAME -u hacluster -p password
 
 pcs cluster setup --start --name iscsicluster1 10.2.2.41 10.2.2.46
 Destroying cluster on nodes: 10.2.2.41, 10.2.2.46...
@@ -48,7 +47,6 @@ Restarting pcsd on the nodes in order to reload the certificates...
 10.2.2.41: Success
 10.2.2.46: Success
 
-Bad - adds 4 nodes - fqdn and ip - in web gui - but good from command line
 
 [root@ds-49kvmlab2-kvm1 ~]# pcs cluster status
 Cluster Status:

@@ -1,0 +1,38 @@
+---
+
+# iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
+- name: Discover iSCSI targets
+  open_iscsi:
+    show_nodes: yes
+    discover: yes
+    portal: {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
+
+# iscsiadm -m node -T {{ env_iscsi_target }}:{{ env_uuid }} --login
+- name: Login to iSCSI target
+  open_iscsi:
+    login: yes
+    target: {{ env_iscsi_target }}:{{ env_uuid }}
+
+- name: Install all CLVM prereqs
+  yum: name={{ item }} state=present
+  with_items:
+    - fence-agents-all
+    - lvm2-cluster
+    - pcs
+
+- name: Start pcsd
+  service:
+    name: pcsd
+    state: started
+    enabled: yes
+
+- name: Reset hacluster password
+  shell: echo {{ kvm_passwor }} | passwd --stdin hacluster
+
+
+
+- name: Ensure network manager is disabled - important
+  service:
+    name: networkmanager
+    state: stopped
+    enabled: no

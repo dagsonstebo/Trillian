@@ -1,0 +1,6 @@
+---
+
+- hosts: kvm_hosts
+  gather_facts: no
+  tasks:
+    - include: roles/cloudstack-iscsi/kvmiscsi.yml
