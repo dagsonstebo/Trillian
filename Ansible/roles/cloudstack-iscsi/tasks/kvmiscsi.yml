@@ -30,13 +30,10 @@
 - name: Configure LVM for cluster disks
   shell: lvmconf --enable-cluster
 
-#- name: Determine list of kvm hosts
-#  "{{ groups['mysql_hosts'] | length }}"
-
 - name: Capture KVM hostnames
   set_fact:
     kvmhostlist: |
-      {%- for item in groups[ kvm_hosts ] -%}
+      {%- for item in groups[ 'kvm_hosts' ] -%}
         {{ item }}
         {%- if not loop.last -%}{{ " " }}{%- else -%}{%- endif -%}
       {%- endfor -%}
@@ -50,30 +47,30 @@
 - block:
   - name: Auth cluster node 1
     shell: pcs cluster auth {{ inventory_hostname }} -u hacluster -p {{ kvm_password }}
-    when: groups['mysql_hosts'] | length == 1
+    when: groups['kvm_hosts'] | length == 1
 
   - name: Auth all cluster nodes
     shell: pcs cluster auth {{ kvmhostlist | trim }} -u hacluster -p {{ kvm_password }}
-    when: groups['mysql_hosts'] | length > 1
+    when: groups['kvm_hosts'] | length > 1
 
   - name: Create single node cluster
     shell: pcs cluster setup --start --name {{ env_name_clean }}-clu1 {{ inventory_hostname }}
-    when: groups['mysql_hosts'] | length == 1
+    when: groups['kvm_hosts'] | length == 1
 
   - name: Create multinode cluster
     shell: pcs cluster setup --start --name {{ env_name_clean }}-clu1 {{ kvmhostlist | trim }}
-    when: groups['mysql_hosts'] | length > 1
+    when: groups['kvm_hosts'] | length > 1
 
   - name: Enable cluster
     shell: pcs cluster enable --all
 
   - name: Configure STONITH single host cluster
     shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ inventory_hostname }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
-    when: groups['mysql_hosts'] | length == 1
+    when: groups['kvm_hosts'] | length == 1
 
   - name: Configure STONITH multinode cluster
     shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ kvmhostlist | trim }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
-    when: groups['mysql_hosts'] | length > 1
+    when: groups['kvm_hosts'] | length > 1
 
   - name: Configure quorum policy
     shell: pcs property set no-quorum-policy=freeze
