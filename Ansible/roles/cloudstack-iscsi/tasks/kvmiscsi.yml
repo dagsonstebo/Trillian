@@ -1,17 +1,15 @@
----
-
 # iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
 - name: Discover iSCSI targets
   open_iscsi:
     show_nodes: yes
     discover: yes
-    portal: {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
+    portal: "{{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}"
 
 # iscsiadm -m node -T {{ env_iscsi_target }}:{{ env_uuid }} --login
 - name: Login to iSCSI target
   open_iscsi:
     login: yes
-    target: {{ env_iscsi_target }}:{{ env_uuid }}
+    target: "{{ env_iscsi_target }}:{{ env_uuid }}"
 
 - name: Install all CLVM prereqs
   yum: name={{ item }} state=present
@@ -27,12 +25,54 @@
     enabled: yes
 
 - name: Reset hacluster password
-  shell: echo {{ kvm_passwor }} | passwd --stdin hacluster
+  shell: echo {{ kvm_password }} | passwd --stdin hacluster
 
+- name: Configure LVM for cluster disks
+  shell: lvmconf --enable-cluster
 
+# First node only
+- block:
+  - name: Auth cluster node 1
+    shell: pcs cluster auth {{ inventory_hostname }} -u hacluster -p {{ kvm_password }}
 
+  - name: Create cluster
+    shell: pcs cluster setup --start --name {{ env_name_clean }}-clu1 {{ inventory_hostname }}
+
+  - name: Enable cluster
+    shell: pcs cluster enable --all
+
+  - name: Configure STONITH
+    shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ inventory_hostname }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
+
+  - name: Configure quorum policy
+    shell: pcs property set no-quorum-policy=freeze
+
+  - name: Configure DLM
+    shell: pcs resource create dlm ocf:pacemaker:controld op monitor interval=30s on-fail=fence clone interleave=true ordered=true
+
+  - name: Configure CLVM
+    shell: pcs resource create clvmd ocf:heartbeat:clvm op monitor interval=30s on-fail=fence clone interleave=true ordered=true
+
+  - name: Configure constraints
+    shell: pcs constraint order start dlm-clone then clvmd-clone
+
+  - name: Configure constraints
+    shell: pcs constraint colocation add clvmd-clone with dlm-clone
+
+  - name: Register all iscsi mounted disks
+    shell: iscsiadm -m session -P3 | grep sd | cut -d ' ' -f 4 | cut -f 1
+    register: iscsiluns
+
+  - name: debug some
+    debug: msg="lun is {{ item }}"
+    with_items:
+      - iscsiluns.results
+
+  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}" )
+
+# https://access.redhat.com/solutions/638843
 - name: Ensure network manager is disabled - important
   service:
-    name: networkmanager
+    name: NetworkManager
     state: stopped
     enabled: no
