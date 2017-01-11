@@ -11,6 +11,13 @@
     login: yes
     target: "{{ env_iscsi_target }}:{{ env_uuid }}"
 
+- name: Check iscsi sessions
+  shell: iscsiadm -m session
+  register: iscsisessions
+
+- name: Print sessions
+  debug: msg={{ iscsisessions.stdout }}
+
 - name: Install all CLVM prereqs
   yum: name={{ item }} state=present
   with_items:
