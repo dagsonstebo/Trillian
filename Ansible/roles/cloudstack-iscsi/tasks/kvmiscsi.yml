@@ -42,7 +42,7 @@
       {%- endfor -%}
 
 - name: Print list of KVM hosts
-  debug: msg="KVM hosts are {{ kvmhostlist | trim }}
+  debug: msg="KVM hosts are {{ kvmhostlist | trim }}"
 
 # First node only
 - block:
