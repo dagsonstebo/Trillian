@@ -38,25 +38,42 @@
     kvmhostlist: |
       {%- for item in groups[ kvm_hosts ] -%}
         {{ hostvars[item]['inventory_hostname'] }}
-        {%- if not loop.last -%} {%- else -%}{%- endif -%}
+        {%- if not loop.last -%}{{ " " }}{%- else -%}{%- endif -%}
       {%- endfor -%}
+  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
 
 - name: Print list of KVM hosts
   debug: msg="KVM hosts are {{ kvmhostlist | trim }}"
+  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
 
 # First node only
 - block:
   - name: Auth cluster node 1
     shell: pcs cluster auth {{ inventory_hostname }} -u hacluster -p {{ kvm_password }}
+    when: groups['mysql_hosts'] | length == 1
+
+  - name: Auth all cluster nodes
+    shell: pcs cluster auth {{ kvmhostlist | trim }} -u hacluster -p {{ kvm_password }}
+    when: groups['mysql_hosts'] | length > 1
 
   - name: Create cluster
     shell: pcs cluster setup --start --name {{ env_name_clean }}-clu1 {{ inventory_hostname }}
+    when: groups['mysql_hosts'] | length == 1
+
+  - name: Create cluster
+    shell: pcs cluster setup --start --name {{ env_name_clean }}-clu1 {{ kvmhostlist | trim }}
+    when: groups['mysql_hosts'] | length > 1
 
   - name: Enable cluster
     shell: pcs cluster enable --all
 
   - name: Configure STONITH
     shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ inventory_hostname }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
+    when: groups['mysql_hosts'] | length == 1
+
+  - name: Configure STONITH
+    shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ kvmhostlist | trim }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
+    when: groups['mysql_hosts'] | length > 1
 
   - name: Configure quorum policy
     shell: pcs property set no-quorum-policy=freeze
@@ -77,7 +94,7 @@
     shell: iscsiadm -m session -P3 | grep sd | cut -d ' ' -f 4 | cut -f 1 | grep -v sdb
     register: iscsiluns
 
-  - name: debug some
+  - name: Print all luns
     debug: msg="lun is {{ item }}"
     with_items:
       - "{{ iscsiluns.stdout_lines }}"
@@ -96,6 +113,17 @@
       - "{{ iscsiluns.stdout_lines }}"
 
   when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
+
+# Additional nodes
+#- block:
+#
+#  - name: vgcreate all disks
+#    shell: vgcreate -cy {{ item.0 }} /dev/{{ item.1 }}
+#    with_together:
+#      - "{{ env_pripools }}"
+#      - "{{ iscsiluns.stdout_lines }}"
+#
+#  when: inventory_hostname != "{{ groups['kvm_hosts'][0] }}"
 
 # https://access.redhat.com/solutions/638843
 - name: Ensure network manager is disabled - important
