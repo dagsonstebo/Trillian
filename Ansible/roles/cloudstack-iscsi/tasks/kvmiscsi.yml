@@ -30,13 +30,13 @@
 - name: Configure LVM for cluster disks
   shell: lvmconf --enable-cluster
 
-- name: Determine list of kvm hosts
-  "{{ groups['mysql_hosts'] | length }}"
+#- name: Determine list of kvm hosts
+#  "{{ groups['mysql_hosts'] | length }}"
 
 - name: List KVM hostnames
   set_fact:
     kvmhostlist: |
-      {%- for item in groups[ kvm_hosts | trim ] -%}
+      {%- for item in groups[ kvm_hosts ] -%}
         {{ hostvars[item]['inventory_hostname'] }}
         {%- if not loop.last -%} {%- else -%}{%- endif -%}
       {%- endfor -%}
