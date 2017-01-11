@@ -1,4 +1,7 @@
 # iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
+- name: log out of all previous iscsi sessions
+  shell: iscsiadm -m session -u
+
 - name: Discover iSCSI targets
   open_iscsi:
     show_nodes: yes
@@ -31,6 +34,10 @@
     state: started
     enabled: yes
 
+- name: Delete all previous clusters
+  shell: pcs cluster destroy --all
+  ignore_errors: yes
+
 - name: Reset hacluster password
   shell: echo {{ kvm_password }} | passwd --stdin hacluster
 
@@ -52,32 +59,17 @@
 
 # First node only
 - block:
-  - name: Auth cluster node 1
-    shell: pcs cluster auth {{ inventory_hostname }} -u hacluster -p {{ kvm_password }}
-    when: groups['kvm_hosts'] | length == 1
-
   - name: Auth all cluster nodes
     shell: pcs cluster auth {{ kvmhostlist | trim }} -u hacluster -p {{ kvm_password }}
-    when: groups['kvm_hosts'] | length > 1
 
-  - name: Create single node cluster
-    shell: pcs cluster setup --start --name {{ env_name_clean }}-clu1 {{ inventory_hostname }}
-    when: groups['kvm_hosts'] | length == 1
-
-  - name: Create multinode cluster
+  - name: Create cluster
     shell: pcs cluster setup --start --name {{ env_name_clean }}-clu1 {{ kvmhostlist | trim }}
-    when: groups['kvm_hosts'] | length > 1
 
   - name: Enable cluster
     shell: pcs cluster enable --all
 
-  - name: Configure STONITH single host cluster
-    shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ inventory_hostname }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
-    when: groups['kvm_hosts'] | length == 1
-
-  - name: Configure STONITH multinode cluster
+  - name: Configure STONITH
     shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ kvmhostlist | trim }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
-    when: groups['kvm_hosts'] | length > 1
 
   - name: Configure quorum policy
     shell: pcs property set no-quorum-policy=freeze
