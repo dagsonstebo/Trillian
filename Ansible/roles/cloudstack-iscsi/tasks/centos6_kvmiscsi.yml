@@ -1,0 +1,126 @@
+- name: Open iptables for clustering
+  shell: "iptables -I INPUT {{ item }}"
+  with_items:
+    - "-m state --state NEW -m multiport -p udp --dports 5404,5405 -j ACCEPT"
+    - "-m addrtype --dst-type MULTICAST -m state --state NEW -m multiport -p udp --dports 5404,5405 -j ACCEPT"
+    - "-m state --state NEW -p tcp --dport 21064 -j ACCEPT"
+    - "-m state --state NEW -p tcp --dport 11111 -j ACCEPT"
+    - "-m state --state NEW -p tcp --dport 8084 -j ACCEPT"
+    - "-m state --state NEW -p tcp --dport 16851 -j ACCEPT"
+
+- name: IPtables save
+  shell: "service iptables save ; service iptables restart"
+
+# iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
+- name: log out of all previous iscsi sessions
+  shell: iscsiadm -m session -u
+  ignore_errors: yes
+
+- name: Rewrite initiator
+  shell: "/sbin/iscsi-iname > /etc/iscsi/initiatorname.iscsi"
+
+- name: Discover iSCSI targets
+  open_iscsi:
+    show_nodes: yes
+    discover: yes
+    portal: "{{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}"
+
+# iscsiadm -m node -T {{ env_iscsi_target }}:{{ env_uuid }} --login
+- name: Login to iSCSI target
+  open_iscsi:
+    login: yes
+    target: "{{ env_iscsi_target }}:{{ env_uuid }}"
+
+- name: Check iscsi sessions
+  shell: iscsiadm -m session
+  register: iscsisessions
+
+- name: Print sessions
+  debug: msg={{ iscsisessions.stdout }}
+
+- name: Install all CLVM prereqs
+  yum: name={{ item }} state=present
+  with_items:
+    - lvm2-cluster
+    - rgmanager
+    - luci
+
+- name: Start ricci and luci
+  service:
+    name: {{ item }}
+    state: started
+    enabled: yes
+  with_items:
+    - ricci
+    - luci
+
+- name: Delete all previous clusters
+  file:
+    path="/etc/cluster/cluster.conf"
+    state="absent"
+
+- name: Reset ricci password
+  shell: echo {{ kvm_password }} | passwd --stdin ricci
+
+- name: Configure LVM for cluster disks
+  shell: lvmconf --enable-cluster
+
+# First node only
+- block:
+  - name: Create cluster
+    shell: ccs -h {{ inventory_hostname }} --createcluster {{ env_name_clean }}-clu1 -p {{ kvm_password }}
+
+  - name: Add all nodes
+    shell: ccs -h {{ inventory_hostname }} --addnode {{ item }} -p {{ kvm_password }}
+    with_items:
+      - groups['kvm_hosts']
+
+  - name: Sync and activate
+    shell: ccs -h ds-{{ inventory_hostname }} --sync --activate
+
+  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
+
+- name: Start services all nodes
+  service:
+    name: {{ item }}
+    state: started
+    enabled: yes
+  with_items:
+    - rgmanager
+    - cman
+    - clvmd
+
+# First node only
+- block:
+
+  - name: Register all iscsi mounted disks
+    shell: iscsiadm -m session -P3 | grep sd | cut -d ' ' -f 4 | cut -f 1 | grep -v sdb
+    register: iscsiluns
+
+  - name: Print all luns
+    debug: msg="lun is {{ item }}"
+    with_items:
+      - "{{ iscsiluns.stdout_lines }}"
+    ignore_errors: true
+
+  - name: pvcreate all disks
+    shell: pvcreate /dev/{{ item }}
+    with_items:
+      - "{{ iscsiluns.stdout_lines }}"
+    ignore_errors: true
+
+  - name: vgcreate all disks
+    shell: vgcreate -cy {{ item.0 }} /dev/{{ item.1 }}
+    with_together:
+      - "{{ env_pripools }}"
+      - "{{ iscsiluns.stdout_lines }}"
+    ignore_errors: yes
+
+  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
+
+# https://access.redhat.com/solutions/638843
+#- name: Ensure network manager is disabled - important
+#  service:
+#    name: NetworkManager
+#    state: stopped
+#    enabled: no
