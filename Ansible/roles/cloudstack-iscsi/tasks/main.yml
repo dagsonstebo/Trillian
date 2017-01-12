@@ -12,7 +12,7 @@
   when: ( storage_action == "kvmiscsi" ) and ( "kvm_hosts" in group_names ) and ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version | int > 6 )
 
 - name: Configure iSCSI on CentOS6 KVM hosts
-  include: ./centos6_iscsi.yml.yml
+  include: ./centos6_iscsi.yml
   when: ( storage_action == "kvmiscsi" ) and ( "kvm_hosts" in group_names ) and ( ansible_distribution == 'CentOS' or ansible_distribution == 'Red Hat Enterprise Linux' ) and ( ansible_distribution_major_version | int < 7 )
 
 #- name: Configure iSCSI on XenServer hosts
