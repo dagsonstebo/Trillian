@@ -1,6 +1,15 @@
 See this http://irvingpop.github.io/blog/2015/03/01/redhat7-clustering-experiments/
 
-
+http://10.2.2.37:8080/client/api?command=createStoragePool
+&scope=cluster
+&zoneid=79447ea1-ed99-4616-84bc-8b4651e4d950
+&podid=b7950a0c-1656-4609-a6b0-3942029ce2b1
+&clusterid=b671ef14-debe-4dfb-b4b9-77c95278bf5f
+&name=ds-49kvmlab3-kvm-pri1
+&provider=DefaultPrimary
+&url=clvm%3A%2F%2Flocalhost%2F%2Fds-49kvmlab3-kvm-pri1
+&response=json
+&_=1484179296332
 
 yum -y update
 yum -y install fence-agents-all lvm2-cluster pcs
