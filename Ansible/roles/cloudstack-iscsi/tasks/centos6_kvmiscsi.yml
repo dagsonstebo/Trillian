@@ -44,10 +44,11 @@
     - lvm2-cluster
     - rgmanager
     - luci
+    - ccs
 
 - name: Start ricci and luci
   service:
-    name: {{ item }}
+    name: "{{ item }}"
     state: started
     enabled: yes
   with_items:
@@ -68,21 +69,21 @@
 # First node only
 - block:
   - name: Create cluster
-    shell: ccs -h {{ inventory_hostname }} --createcluster {{ env_name_clean }}-clu1 -p {{ kvm_password }}
+    shell: ccs -h {{ inventory_hostname }} --createcluster kvmcl1 -p {{ kvm_password }}
 
   - name: Add all nodes
     shell: ccs -h {{ inventory_hostname }} --addnode {{ item }} -p {{ kvm_password }}
     with_items:
-      - groups['kvm_hosts']
+      - "{{ groups['kvm_hosts'] }}"
 
   - name: Sync and activate
-    shell: ccs -h ds-{{ inventory_hostname }} --sync --activate
+    shell: ccs -h {{ inventory_hostname }} --sync --activate -p {{ kvm_password }}
 
   when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
 
 - name: Start services all nodes
   service:
-    name: {{ item }}
+    name: "{{ item }}"
     state: started
     enabled: yes
   with_items:
@@ -98,7 +99,7 @@
     register: iscsiluns
 
   - name: Print all luns
-    debug: msg="lun is {{ item }}"
+    debug: msg="Lun detected {{ item }}"
     with_items:
       - "{{ iscsiluns.stdout_lines }}"
     ignore_errors: true
@@ -117,10 +118,3 @@
     ignore_errors: yes
 
   when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
-
-# https://access.redhat.com/solutions/638843
-#- name: Ensure network manager is disabled - important
-#  service:
-#    name: NetworkManager
-#    state: stopped
-#    enabled: no
