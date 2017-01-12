@@ -17,7 +17,15 @@
   ignore_errors: yes
 
 - name: Rewrite initiator
-  shell: "/sbin/iscsi-iname > /etc/iscsi/initiatorname.iscsi"
+  shell: echo "InitiatorName="`/sbin/iscsi-iname` > /etc/iscsi/initiatorname.iscsi
+
+- name: Restart iscsi
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - iscsi
+    - iscsid
 
 - name: Discover iSCSI targets
   open_iscsi:
