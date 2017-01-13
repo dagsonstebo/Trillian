@@ -86,7 +86,7 @@
 
   - name: Cover for 2 node clusters
     shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
-    when: groups['mysql_hosts'] | length | int == 2
+    when: groups['kvm_hosts'] | length | int == 2
 
   - name: Fence daemon TBC
     shell: ccs -h {{ inventory_hostname }} --setfencedaemon {{ item }} -p {{ kvm_password }}
