@@ -163,7 +163,7 @@
 - hosts: primary_storage_hosts_iscsi
   gather_facts: no
   roles:
-    - { role: cloudstack-iscsi, storage_action: 'addprimary', when: env_priprot | lower == "iscsi" }
+    - { role: cloudstack-iscsiluns, storage_action: 'addprimary', when: env_priprot | lower == "iscsi" }
 
 ## update status
 
@@ -199,7 +199,7 @@
 - hosts: kvm_hosts
   gather_facts: no
   roles:
-    - { role: cloudstack-iscsi, storage_action: 'kvmiscsi', when: env_priprot | lower == "iscsi" }
+    - { role: cloudstack-iscsiclients, storage_action: 'kvmiscsi', when: env_priprot | lower == "iscsi" }
 
 ## update status
 

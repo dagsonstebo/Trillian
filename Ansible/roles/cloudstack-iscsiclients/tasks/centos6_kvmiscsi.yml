@@ -84,6 +84,16 @@
     with_items:
       - "{{ groups['kvm_hosts'] }}"
 
+  - name: Cover for 2 node clusters
+    shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
+    when: groups['mysql_hosts'] | length | int == 2
+
+  - name: Fence daemon TBC
+    shell: ccs -h {{ inventory_hostname }} --setfencedaemon {{ item }} -p {{ kvm_password }}
+    with_items:
+      - "post_fail_delay=0"
+      - "post_join_delay=25"
+
   - name: Sync and activate
     shell: ccs -h {{ inventory_hostname }} --sync --activate -p {{ kvm_password }}
 
