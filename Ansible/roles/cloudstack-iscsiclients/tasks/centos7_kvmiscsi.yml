@@ -3,6 +3,17 @@
   shell: iscsiadm -m session -u
   ignore_errors: yes
 
+- name: Rewrite initiator
+  shell: echo "InitiatorName={{ env_iscsi_target }}.{{ inventory_hostname }}:{{ env_uuid }}" > /etc/iscsi/initiatorname.iscsi
+
+- name: Restart iscsi
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - iscsi
+    - iscsid
+
 - name: Discover iSCSI targets
   open_iscsi:
     show_nodes: yes
