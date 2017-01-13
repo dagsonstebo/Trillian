@@ -38,10 +38,33 @@
   shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1 set attribute {{ item }}
   with_items:
     - "authentication=0"
-    - "generate_node_acls=1"
+    - "generate_node_acls=0"
     - "cache_dynamic_acls=1"
-    - "demo_mode_discovery=1"
-    - "demo_mode_write_protect=0"
+##    - "demo_mode_discovery=0"
+##    - "demo_mode_write_protect=0"
+#    - "authentication=0"
+#    - "generate_node_acls=1"
+#    - "cache_dynamic_acls=1"
+#    - "demo_mode_discovery=1"
+#    - "demo_mode_write_protect=0"
+
+- name: Targetcli - ACLs KVM
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/acls create {{ env_iscsi_target }}.{{ item }}:{{ env_uuid }}
+  with_items:
+    - "{{ groups['kvm_hosts'] }}"
+  when: env_hv == "kvm"
+
+- name: Targetcli - ACLs XS
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/acls create {{ env_iscsi_target }}.{{ item }}:{{ env_uuid }}
+  with_items:
+    - "{{ groups['xenserver_hosts'] }}"
+  when: env_hv == "xenserver"
+
+- name: Targetcli - ACLs ESXi
+  shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }}/tpg1/acls create {{ env_iscsi_target }}.{{ item }}:{{ env_uuid }}
+  with_items:
+    - "{{ groups['vmware_hosts'] }}"
+  when: env_hv == "vmware"
 
 - name: Targetcli - add KVM quorum backstore
   shell: targetcli backstores/fileio create {{ env_name_clean }}-quorum {{ env_pripath_iscsi }}{{ env_name_clean }}/{{ env_name_clean }}-quorum 10M write_back=false
