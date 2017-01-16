@@ -87,12 +87,15 @@
     with_items:
       - "{{ groups['kvm_hosts'] }}"
 
-#  - name: Create quorumdisk
-#    shell: mkqdisk -c /dev/sdb -l quorumdisk
+  - name: Create quorumdisk
+    shell: echo "y" | mkqdisk -c /dev/sdb -l quorumdisk
 
-  - name: Cover for 2 node clusters
-    shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
-    when: groups['kvm_hosts'] | length | int == 2
+  - name: Configure quorum disks
+    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk
+
+#  - name: Cover for 2 node clusters
+#    shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
+#    when: groups['kvm_hosts'] | length | int == 2
 
   - name: Fence daemon TBC
     shell: ccs -h {{ inventory_hostname }} --setfencedaemon {{ item }} -p {{ kvm_password }}
