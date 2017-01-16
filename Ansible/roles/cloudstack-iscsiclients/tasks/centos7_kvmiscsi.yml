@@ -81,11 +81,11 @@
   - name: Enable cluster
     shell: pcs cluster enable --all
 
-#  - name: Configure STONITH
-#    shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ kvmhostlist | trim }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
+  - name: Configure STONITH
+    shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ kvmhostlist | trim }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
 
-  - name: Disable stonith
-    shell: pcs property set stonith-enabled=false
+#  - name: Disable stonith
+#    shell: pcs property set stonith-enabled=false
 
   - name: Configure quorum policy
     shell: pcs property set no-quorum-policy=freeze
