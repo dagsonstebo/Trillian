@@ -39,6 +39,7 @@
     - fence-agents-all
     - lvm2-cluster
     - pcs
+    - corosync-qdevice
 
 - name: Start pcsd
   service:
@@ -80,8 +81,11 @@
   - name: Enable cluster
     shell: pcs cluster enable --all
 
-  - name: Configure STONITH
-    shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ kvmhostlist | trim }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
+#  - name: Configure STONITH
+#    shell: pcs stonith create scsi fence_scsi pcmk_host_list="{{ kvmhostlist | trim }}" pcmk_monitor_action="metadata" pcmk_reboot_action="off" meta provides="unfencing" devices="/dev/sdb"
+
+  - name: Disable stonith
+    shell: pcs property set stonith-enabled=false
 
   - name: Configure quorum policy
     shell: pcs property set no-quorum-policy=freeze
@@ -97,6 +101,9 @@
 
   - name: Configure constraints
     shell: pcs constraint colocation add clvmd-clone with dlm-clone
+
+#  - name: Create quorum disk
+#    shell: mkqdisk -c /dev/sdb -l quorumdisk
 
   - name: Register all iscsi mounted disks
     shell: iscsiadm -m session -P3 | grep sd | cut -d ' ' -f 4 | cut -f 1 | grep -v sdb
