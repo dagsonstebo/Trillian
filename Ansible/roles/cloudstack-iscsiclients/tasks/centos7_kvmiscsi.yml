@@ -1,5 +1,5 @@
 # iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
-- name: log out of all previous iscsi sessions
+- name: Log out of all previous iscsi sessions - expected to fail
   shell: iscsiadm -m session -u
   ignore_errors: yes
 

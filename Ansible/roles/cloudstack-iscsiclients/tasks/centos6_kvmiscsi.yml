@@ -12,7 +12,7 @@
   shell: "service iptables save ; service iptables restart"
 
 # iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
-- name: log out of all previous iscsi sessions
+- name: Log out of all previous iscsi sessions - expected to fail
   shell: iscsiadm -m session -u
   ignore_errors: yes
 
@@ -87,14 +87,18 @@
     with_items:
       - "{{ groups['kvm_hosts'] }}"
 
-#  - name: Create quorumdisk
-#    shell: echo "y" | mkqdisk -c /dev/sdb -l quorumdisk
+  - name: Create quorumdisk
+    shell: echo "y" | mkqdisk -c /dev/sdb -l quorumdisk
 
-#  - name: Configure quorum disks
-#    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk
+  - name: Configure quorum disks
+    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk
 
-  - name: Cover for 2 node clusters
-    shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
+#  - name: Cover for 2 node clusters
+#    shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
+#    when: groups['kvm_hosts'] | length | int == 2
+
+  - name: Votes
+    shell: ccs -h {{ inventory_hostname }} --setcman two_node=0 expected_votes={{ groups['kvm_hosts'] | length | int + 1 }} -p {{ kvm_password }}
     when: groups['kvm_hosts'] | length | int == 2
 
   - name: Fence daemon TBC
