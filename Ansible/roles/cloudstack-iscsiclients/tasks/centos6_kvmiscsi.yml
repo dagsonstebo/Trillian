@@ -108,7 +108,8 @@
 
   when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
 
-- name: Start services all nodes
+# Stagger startup
+- name: Start services fist node
   service:
     name: "{{ item }}"
     state: started
@@ -117,6 +118,18 @@
     - rgmanager
     - cman
     - clvmd
+  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
+
+- name: Start services other nodes
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items:
+    - rgmanager
+    - cman
+    - clvmd
+  when: inventory_hostname != "{{ groups['kvm_hosts'][0] }}"
 
 # First node only
 - block:
