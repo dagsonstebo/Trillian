@@ -35,6 +35,9 @@
     when: env_hv == "kvm"
     ignore_errors: true
 
+  - name: Targetcli - save config
+    shell: targetcli saveconfig
+
   - name: Targetcli - check config - expected to fail
     shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }} ls
     register: targetconfig

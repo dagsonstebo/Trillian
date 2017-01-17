@@ -84,6 +84,9 @@
   with_items:
     - "{{ env_pripools }}"
 
+- name: Targetcli - save config
+  shell: targetcli saveconfig
+
 - name: Targetcli - check config
   shell: targetcli iscsi/{{ env_iscsi_target }}:{{ env_uuid }} ls
   register: targetconfig
