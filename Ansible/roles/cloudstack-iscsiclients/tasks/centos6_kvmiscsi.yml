@@ -119,6 +119,7 @@
     - cman
     - clvmd
   when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
+  ignore_errors: yes
 
 - name: Start services other nodes
   service:
