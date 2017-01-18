@@ -16,6 +16,10 @@
 - name: IPtables save
   shell: "service iptables save ; service iptables restart"
 
+- name: Find default gw
+  shell: netstat -rn | grep ^0.0.0.0 | awk '{print $2}'
+  register: defgw
+
 # iscsiadm -m discovery -t sendtargets -p {{ hostvars[groups['primary_storage_hosts_iscsi'][0]]['ansible_ssh_host'] }}
 - name: Log out of all previous iscsi sessions - expected to fail
   shell: iscsiadm -m session -u
@@ -88,7 +92,7 @@
     shell: ccs -h {{ inventory_hostname }} --createcluster kvmcl1 -p {{ kvm_password }}
 
   - name: Add all nodes
-    shell: ccs -h {{ inventory_hostname }} --addnode {{ item }} -p {{ kvm_password }}
+    shell: ccs -h {{ inventory_hostname }} --addnode {{ item }} --votes 2 -p {{ kvm_password }}
     with_items:
       - "{{ groups['kvm_hosts'] }}"
 
@@ -96,15 +100,16 @@
     shell: echo "y" | mkqdisk -c /dev/sdb -l quorumdisk
 
   - name: Configure quorum disks
-    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk votes="1" -p {{ kvm_password }}
+    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk votes="3" -p {{ kvm_password }}
 
   - name: Unicast
     shell: ccs -h {{ inventory_hostname }} --setcman transport="udpu" -p {{ kvm_password }}
 
   - name: Configure heuristics
-    shell: ccs --addheuristic program="ping {{ item }} -c1 -w1" score="1" tko="10" -p {{ kvm_password }}
+    shell: ccs --addheuristic program="ping {{ item }} -c1 -w1" score="1" interval="2" tko="10" -p {{ kvm_password }}
     with_items:
-      - "{{ groups['kvm_hosts'] }}"
+       - "{{ defgw.stdout }}"
+#      - "{{ groups['kvm_hosts'] }}"
 
 #  - name: Cover for 2 node clusters
 #    shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
