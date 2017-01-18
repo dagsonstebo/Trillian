@@ -96,10 +96,13 @@
     shell: echo "y" | mkqdisk -c /dev/sdb -l quorumdisk
 
   - name: Configure quorum disks
-    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk votes="1"
+    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk votes="1" -p {{ kvm_password }}
+
+  - name: Unicast
+    shell: ccs -h {{ inventory_hostname }} --setcman transport="udpu" -p {{ kvm_password }}
 
   - name: Configure heuristics
-    shell: ccs --addheuristic program="ping {{ item }} -c1 -w1" score="1"
+    shell: ccs --addheuristic program="ping {{ item }} -c1 -w1" score="1" tko="10" -p {{ kvm_password }}
     with_items:
       - "{{ groups['kvm_hosts'] }}"
 
