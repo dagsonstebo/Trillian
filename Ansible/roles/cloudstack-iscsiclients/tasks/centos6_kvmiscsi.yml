@@ -126,7 +126,6 @@
     - rgmanager
     - cman
     - clvmd
-  when: inventory_hostname == "{{ groups['kvm_hosts'][0] }}"
   ignore_errors: yes
 
 # Staggered reboot
@@ -140,7 +139,7 @@
 
 - name: Reboot the rest
   shell: /sbin/reboot
-  when: inventory_hostname != "{{ groups['kvm_hosts'][0] }}"
+  when: inventory_hostname <> "{{ groups['kvm_hosts'][0] }}"
   ignore_errors: yes
 
 - name: wait for last host
