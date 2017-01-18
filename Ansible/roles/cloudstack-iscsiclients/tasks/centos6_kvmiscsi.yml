@@ -91,15 +91,20 @@
     shell: echo "y" | mkqdisk -c /dev/sdb -l quorumdisk
 
   - name: Configure quorum disks
-    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk
+    shell: ccs -h {{ inventory_hostname }} --setquorumd label=quorumdisk votes="1"
+
+  - name: Configure heuristics
+    shell: ccs --addheuristic program="ping {{ item }} -c1 -w1" score="1"
+    with_items:
+      - "{{ groups['kvm_hosts'] }}"
 
 #  - name: Cover for 2 node clusters
 #    shell: ccs -h {{ inventory_hostname }} --setcman two_node=1 expected_votes=1 -p {{ kvm_password }}
 #    when: groups['kvm_hosts'] | length | int == 2
 
-  - name: Votes
-    shell: ccs -h {{ inventory_hostname }} --setcman two_node=0 expected_votes={{ groups['kvm_hosts'] | length | int + 1 }} -p {{ kvm_password }}
-    when: groups['kvm_hosts'] | length | int == 2
+#  - name: Votes
+#    shell: ccs -h {{ inventory_hostname }} --setcman two_node=0 expected_votes={{ groups['kvm_hosts'] | length | int + 1 }} -p {{ kvm_password }}
+#    when: groups['kvm_hosts'] | length | int == 2
 
   - name: Fence daemon TBC
     shell: ccs -h {{ inventory_hostname }} --setfencedaemon {{ item }} -p {{ kvm_password }}
