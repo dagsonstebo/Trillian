@@ -122,6 +122,7 @@
   service:
     name: "{{ item }}"
     enabled: yes
+    state: started
   with_items:
     - rgmanager
     - cman
