@@ -143,17 +143,18 @@
   ignore_errors: yes
 
 # Staggered reboot
-- block:
 
-  - name: Reboot
-    shell: /sbin/reboot
-    ignore_errors: yes
+- name: Reboot
+  shell: sleep {{ groups.kvm_hosts.index(inventory_hostname) | int x 10 }} && /sbin/reboot
+#    ignore_errors: yes
 
-  - name: wait for first host
-    local_action: wait_for port=22 host="{{ hostvars[item]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
+#  - name: Reboot
+#    shell: /sbin/reboot
+#    ignore_errors: yes
 
-  with_items:
-    - "{{ groups['kvm_hosts'] }}"
+#  - name: wait for first host
+#    local_action: wait_for port=22 host="{{ hostvars[item]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
+
 
 
 
