@@ -144,36 +144,8 @@
 
 # Staggered reboot
 
-- name: report delays
-  debug: msg="delay is {{ groups.kvm_hosts.index(inventory_hostname) }}"
-
-- name: report delays
-  debug: msg="delay is {{ groups.kvm_hosts.index(inventory_hostname) * 10}}"
-
-- name: Reboot
-  shell: sleep {{ groups.kvm_hosts.index(inventory_hostname) | int * 10 }} && /sbin/reboot
-#    ignore_errors: yes
-
-#  - name: Reboot
-#    shell: /sbin/reboot
-#    ignore_errors: yes
-
-#  - name: wait for first host
-#    local_action: wait_for port=22 host="{{ hostvars[item]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
-
-
-
-
-#- name: wait for first host
-#  local_action: wait_for port=22 host="{{ hostvars[groups['kvm_hosts'][0]]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
-
-#- name: Reboot the rest
-#  shell: /sbin/reboot
-#  when: inventory_hostname <> "{{ groups['kvm_hosts'][0] }}"
-#  ignore_errors: yes
-
-#- name: wait for last host
-#  local_action: wait_for port=22 host="{{ hostvars[groups['kvm_hosts'][-1]]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
+- name: Staggered reboot
+  shell: sleep {{ groups.kvm_hosts.index(inventory_hostname) | int * 15 }} && /sbin/reboot
 
 # First node only
 - block:

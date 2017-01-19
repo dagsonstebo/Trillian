@@ -136,3 +136,11 @@
     name: NetworkManager
     state: stopped
     enabled: no
+
+# Staggered reboot
+
+- name: Staggered reboot
+  shell: sleep {{ groups.kvm_hosts.index(inventory_hostname) | int * 15 }} && /sbin/reboot
+
+- name: Wait for last host
+  local_action: wait_for port=22 host="{{ hostvars[groups['kvm_hosts'][-1]]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
