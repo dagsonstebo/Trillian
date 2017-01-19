@@ -144,8 +144,14 @@
 
 # Staggered reboot
 
+- name: report delays
+  debug: msg="delay is {{ groups.kvm_hosts.index(inventory_hostname) }}"
+
+- name: report delays
+  debug: msg="delay is {{ groups.kvm_hosts.index(inventory_hostname) * 10}}"
+
 - name: Reboot
-  shell: sleep {{ groups.kvm_hosts.index(inventory_hostname) | int x 10 }} && /sbin/reboot
+  shell: sleep {{ groups.kvm_hosts.index(inventory_hostname) | int * 10 }} && /sbin/reboot
 #    ignore_errors: yes
 
 #  - name: Reboot
@@ -172,8 +178,8 @@
 # First node only
 - block:
 
-  - name: Reconfirm first host
-    local_action: wait_for port=22 host="{{ hostvars[groups['kvm_hosts'][0]]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
+  - name: Wait for last host
+    local_action: wait_for port=22 host="{{ hostvars[groups['kvm_hosts'][-1]]['ansible_ssh_host'] }}" timeout={{ ssh_retries }} connect_timeout=5 delay=30
 
   - name: Register all iscsi mounted disks
     shell: iscsiadm -m session -P3 | grep sd | cut -d ' ' -f 4 | cut -f 1 | grep -v sdb
