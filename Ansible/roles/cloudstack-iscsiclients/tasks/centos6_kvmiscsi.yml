@@ -109,6 +109,7 @@
     shell: ccs --addheuristic program="ping {{ item }} -c1 -w1" score="1" interval="2" tko="10" -p {{ kvm_password }}
     with_items:
        - "{{ defgw.stdout }}"
+    ignore_errors: yes
 #      - "{{ groups['kvm_hosts'] }}"
 
 #  - name: Cover for 2 node clusters
