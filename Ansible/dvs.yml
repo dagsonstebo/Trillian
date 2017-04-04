@@ -1,0 +1,5 @@
+---
+
+- hosts: all
+  tasks:
+    - include: /trilian-dvs/Ansible/roles/vsphere/tasks/migrate_mgmt_to_dvs.yml

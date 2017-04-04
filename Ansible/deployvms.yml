@@ -147,7 +147,8 @@
   tasks:
     - include: ./roles/vsphere/tasks/configure_vcenter.yml
       when: "num_esxi_hosts | int != 0"
-
+    - include: ./roles/vsphere/tasks/migrate_mgmt_to_dvs.yml
+      when: esxi_use_mgmt_dvswitch
 ## update status
 
 - hosts: localhost

@@ -42,3 +42,4 @@
 
 - include: ./add_local_storage.yml
   when: use_local_storage
+

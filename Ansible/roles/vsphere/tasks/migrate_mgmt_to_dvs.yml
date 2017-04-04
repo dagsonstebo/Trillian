@@ -1,0 +1,97 @@
+---
+
+#- name: run PowerShell script to migrate management vmk
+#  script:  /trilian-dvs/Ansible/roles/vsphere/scripts/vs2dvs_convert.ps1
+
+- name: Create mgmt dvswitch
+  local_action:
+    module: vmware_dvswitch
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    datacenter_name: "{{ vmware_datacenter_name }}"
+    switch_name: dvSwitch-mgmt
+    mtu: 1500
+    uplink_quantity: 1
+    discovery_proto: lldp
+    discovery_operation: both
+    state: present
+    validate_certs: false
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
+    - add_mgmt_dvswitch
+
+- name: Create Management portgroup on dvSwitch
+  local_action:
+    module: vmware_dvs_portgroup
+    hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+    username: "{{ vmware_vcsa_user }}"
+    password: "{{ vmware_vcsa_pass }}"
+    portgroup_name: 'Management Network'
+    switch_name: dvSwitch-mgmt
+    num_ports: 120
+    portgroup_type: earlyBinding
+    state: present
+    vlan_id: 0
+    validate_certs: false
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
+    - add_mgmt_dvswitch
+
+- name: create new vswitch for comms
+  local_action:
+    module: vmware_vswitch
+    hostname: "{{ hostvars[item]['ansible_ssh_host'] }}"
+    username: "{{ vmware_esxi_username }}"
+    password: "{{ vmware_esxi_password }}"
+    switch_name: vSwitch1
+    nic_name: vmnic2
+    mtu: 1500
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
+    - add_mgmt_dvswitch
+    - add_temp_interface
+
+- name: add interface to temp vswitch
+  raw: esxcli network ip interface add --interface-name=vmk9 --portgroup-name='tempMgmt'
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
+    - add_mgmt_dvswitch
+    - add_temp_interface
+
+
+- name: add interface to temp vswitch
+  raw: esxcli network ip interface set -e true -i vmk9
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
+    - add_mgmt_dvswitch
+    - add_temp_interface
+
+- name: set temp interface to dhcp
+  raw: esxcli network ip interface ipv4 set --interface-name=vmk9 --type=dhcp
+  tags:
+    - vc_config
+    - add_vwmare_hosts
+    - add_dvswitch
+    - add_mgmt_dvswitch
+    - add_temp_interface
+
+#- name: esxcli network vswitch standard uplink remove --uplink-name=vmnic0 --vswitch-name=vSwitch0
+#  tags:
+#    - vc_config
+#    - add_vwmare_hosts
+#    - add_dvswitch
+#    - add_mgmt_dvswitch
+#    - add_temp_interface

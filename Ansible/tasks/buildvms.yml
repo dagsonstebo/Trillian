@@ -413,7 +413,30 @@
   with_items:
     - "{{ groups['esxi_hosts'] }}"
   register: esxi_retval
-  when: use_external_hv_hosts|bool == false
+  when: (use_external_hv_hosts|bool == false) and (esxi_use_mgmt_dvswitch|bool == false)
+
+
+- name: build ESXi hosts (With teritary network for dvswitch vmknic migration) 
+  local_action:
+    module: cs_instance
+    name: "{{ item }}"
+    service_offering: "{{ esxi_service_offering }}"
+    template: "{{ esxi_template }}"
+    hypervisor: "{{ management_vm_hypervisor }}"
+    project: "{{ build_project }}"
+    zone: "{{ build_zone }}"
+    keyboard: "{{ build_keyboard }}"
+    networks:
+      - "{{ management_network }}"
+      - "{{ guest_public_network }}"
+      - "{{ marvin_network }}"
+    force: true
+    state: present
+  with_items:
+    - "{{ groups['esxi_hosts'] }}"
+  register: esxi_retval
+  when: (use_external_hv_hosts|bool == false) and esxi_use_mgmt_dvswitch|bool == true
+
 
 - name: Update inventory file with ESXi host IP addresses
   replace:
