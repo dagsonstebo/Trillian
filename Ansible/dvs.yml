@@ -3,8 +3,9 @@
 #- hosts: all
 #  tasks:
 #    - include: /trilian-dvs/Ansible/roles/vsphere/tasks/migrate_mgmt_to_dvs.yml
-
-- hosts: vc_hosts
+- hosts: localhost
+  connection: local
+  gather_facts: no
   tasks:
     - name: Create mgmt dvswitch
       local_action:
