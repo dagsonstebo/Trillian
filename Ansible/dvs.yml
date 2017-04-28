@@ -35,3 +35,15 @@
         state: present
         vlan_id: 0
         validate_certs: false
+
+    - name: Add Host to dVS
+      local_action:
+        module: vmware_dvs_host
+        hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+        username: "{{ vmware_vcsa_user }}"
+        password: "{{ vmware_vcsa_pass }}"
+        esxi_hostname: "10.2.2.20"
+        switch_name: dvSwitch-mgmt
+        vmnics:
+            - vmnic0
+        state: present    
