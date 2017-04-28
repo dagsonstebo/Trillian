@@ -1,5 +1,36 @@
 ---
 
-- hosts: all
+#- hosts: all
+#  tasks:
+#    - include: /trilian-dvs/Ansible/roles/vsphere/tasks/migrate_mgmt_to_dvs.yml
+
+- hosts: vc_hosts
   tasks:
-    - include: /trilian-dvs/Ansible/roles/vsphere/tasks/migrate_mgmt_to_dvs.yml
+    - name: Create mgmt dvswitch
+      local_action:
+        module: vmware_dvswitch
+        hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+        username: "{{ vmware_vcsa_user }}"
+        password: "{{ vmware_vcsa_pass }}"
+        datacenter_name: "{{ vmware_datacenter_name }}"
+        switch_name: dvSwitch-mgmt
+        mtu: 1500
+        uplink_quantity: 1
+        discovery_proto: lldp
+        discovery_operation: both
+        state: present
+        validate_certs: false
+
+    - name: Create Management portgroup on dvSwitch
+      local_action:
+        module: vmware_dvs_portgroup
+        hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+        username: "{{ vmware_vcsa_user }}"
+        password: "{{ vmware_vcsa_pass }}"
+        portgroup_name: 'Management Network'
+        switch_name: dvSwitch-mgmt
+        num_ports: 120
+        portgroup_type: earlyBinding
+        state: present
+        vlan_id: 0
+        validate_certs: false
