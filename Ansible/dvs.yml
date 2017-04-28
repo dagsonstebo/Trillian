@@ -36,14 +36,27 @@
         vlan_id: 0
         validate_certs: false
 
-    - name: Add Host to dVS
+#    - name: Add Host to dVS
+#      local_action:
+#        module: vmware_dvs_host
+#        hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
+#        username: "{{ vmware_vcsa_user }}"
+#        password: "{{ vmware_vcsa_pass }}"
+#        esxi_hostname: "10.2.2.20"
+#        switch_name: dvSwitch-mgmt
+#        vmnics:
+#            - vmnic0
+#        state: present
+
+    - name: Migrate Management vmk
       local_action:
-        module: vmware_dvs_host
+        module: vmware_migrate_vmk
         hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
         username: "{{ vmware_vcsa_user }}"
         password: "{{ vmware_vcsa_pass }}"
-        esxi_hostname: "10.2.2.20"
-        switch_name: dvSwitch-mgmt
-        vmnics:
-            - vmnic0
-        state: present    
+        esxi_hostname: esxi_hostname
+        device: vmk0
+        current_switch_name: vSwitch0
+        current_portgroup_name: "Management Network"
+        migrate_switch_name: dvSwitch-mgmt
+        migrate_portgroup_name: "Management Network"
