@@ -60,3 +60,4 @@
         current_portgroup_name: "Management Network"
         migrate_switch_name: dvSwitch-mgmt
         migrate_portgroup_name: "Management Network"
+        validate_certs: false
