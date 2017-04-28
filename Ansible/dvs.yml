@@ -54,7 +54,7 @@
         hostname: "{{ hostvars[groups['vc_hosts'][0]]['ansible_ssh_host'] }}"
         username: "{{ vmware_vcsa_user }}"
         password: "{{ vmware_vcsa_pass }}"
-        esxi_hostname: esxi_hostname
+        esxi_hostname: "10.2.2.20"
         device: vmk0
         current_switch_name: vSwitch0
         current_portgroup_name: "Management Network"
