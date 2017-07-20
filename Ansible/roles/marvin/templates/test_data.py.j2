@@ -1956,6 +1956,7 @@ test_data = {
             "serviceProviderList": {
                 "Dhcp": "NuageVsp",
                 "Connectivity": "NuageVsp"
+<<<<<<< HEAD
             }
         },
         "shared_nuage_public_network_offering": {
@@ -1976,6 +1977,28 @@ test_data = {
                     "PublicAccess": "true"
                 }
             }
+=======
+            }
+        },
+        "shared_nuage_public_network_offering": {
+            "name": 'nuage_marvin',
+            "displaytext": 'nuage_marvin',
+            "guestiptype": 'shared',
+            "supportedservices": 'Dhcp,Connectivity',
+            "traffictype": 'GUEST',
+            "specifyVlan": "False",
+            "specifyIpRanges": "True",
+            "availability": 'Optional',
+            "serviceProviderList": {
+                "Dhcp": "NuageVsp",
+                "Connectivity": "NuageVsp"
+            },
+            "serviceCapabilityList": {
+                "Connectivity": {
+                    "PublicAccess": "true"
+                }
+            }
+>>>>>>> a0934c9c2588604124c15d0541b0957d884d555e
 
         },
         # Test data for Shared Network creation
